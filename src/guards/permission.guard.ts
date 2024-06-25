@@ -80,6 +80,10 @@ export class PermissionAuthGuard implements CanActivate {
   private getAvailableResourcePermissions(
     company: CompanyResources,
   ): Resource[] {
+    if (company.excludedResourcePermissions === '*') {
+      return this.includePermissions(company.includedResourcePermissions);
+    }
+
     const includedPermissions = this.includePermissions(
       company.includedResourcePermissions,
     );
