@@ -1,33 +1,31 @@
-export const mockUser = {
+import { PermissionsEnum } from 'src/interfaces/permissions';
+import { Resource } from 'src/interfaces/resource';
+
+export const mockUser: User = {
   id: 1,
   name: 'John Doe',
   email: '',
-  permissions: [
+  companies: [
     {
       companyId: 1,
-      resource: 'transactions',
-      route: '*', //ANY ROUTE HERE EX: /transactions/:id
-      routeMethod: '*', //GET, POST, PUT, PATCH, DELETE
-    },
-    {
-      companyId: 1,
-      resource: 'default',
-      route: '*', //ANY ROUTE HERE EX: /transactions/:id
-      routeMethod: '*', //GET, POST, PUT, PATCH, DELETE
+      resources: [
+        {
+          name: 'transactions',
+          permissions: [PermissionsEnum.CREATE, PermissionsEnum.READ],
+        },
+      ],
     },
   ],
 };
 
-export interface Permission {
+export interface CompanyResources {
   companyId: number;
-  resource: string;
-  route: string;
-  routeMethod: string;
+  resources: Resource[];
 }
 
 export interface User {
   id: number;
   name: string;
   email: string;
-  permissions: Permission[];
+  companies: CompanyResources[];
 }

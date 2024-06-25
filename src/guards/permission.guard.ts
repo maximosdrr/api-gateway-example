@@ -6,8 +6,10 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-import { User, mockUser } from './mock';
+import { CompanyResources, User, mockUser } from './mock';
 import { MicroserviceClientService } from 'src/services/microservice-client.service';
+import { Resource } from 'src/interfaces/resource';
+import { PermissionsEnum } from 'src/interfaces/permissions';
 
 @Injectable()
 export class PermissionAuthGuard implements CanActivate {
@@ -29,75 +31,64 @@ export class PermissionAuthGuard implements CanActivate {
     const user = mockUser;
 
     const host = request.params.host;
-
-    const company = Number(request.headers['x-company']);
-
-    this.verifyUserCompanyAccess(user, company);
-
-    const client = this.microserviceClientService.pickClientByHost(host);
-
     const resourceName = request.params.resource;
 
+    const client = this.microserviceClientService.pickClientByHost(host);
     const resource = client.getResourceByName(resourceName);
 
-    if (!resource) {
-      throw new UnauthorizedException('Resource not found');
-    }
+    const companyId = Number(request.headers['x-company']);
+    const company = this.getUserCompanyResources(user, companyId);
 
-    this.verifyUserResourceAccess(user, resourceName);
-
-    const routePath = request.params.path ?? '/';
     const method = request.method;
 
-    this.verifyUserRouteAccess(user, routePath, method);
+    this.verifyResourcePermission(company, resource, method);
 
     return true;
   }
 
-  private verifyUserCompanyAccess(user: User, company: number) {
-    const result = user.permissions.some(
-      (permission) => permission.companyId === company,
-    );
+  private getUserCompanyResources(user: User, companyId: number) {
+    const result = user.companies.find((c) => c.companyId === companyId);
 
     if (!result) {
       throw new UnauthorizedException('Cannot access this company');
     }
+
+    return result;
   }
 
-  private verifyUserResourceAccess(user: User, resource: string) {
-    const result = user.permissions.some(
-      (permission) => permission.resource === resource,
+  private verifyResourcePermission(
+    company: CompanyResources,
+    resource: Resource,
+    method: string,
+  ) {
+    const permission = this.getPermissionByMethod(method);
+
+    const targetResource = company.resources.find(
+      (r) => r.name === resource.name,
     );
 
-    if (!result) {
+    if (!targetResource) {
       throw new UnauthorizedException('Cannot access this resource');
+    }
+
+    const hasPermission = targetResource.permissions.includes(permission);
+
+    if (!hasPermission) {
+      throw new UnauthorizedException('Permission denied');
     }
   }
 
-  private verifyUserRouteAccess(user: User, routePath: string, method: string) {
-    const isWildCard = (value: string) => value === '*' || value === 'ALL';
+  private getPermissionByMethod(method: string) {
+    const map = {
+      GET: PermissionsEnum.READ,
+      POST: PermissionsEnum.CREATE,
+      PUT: PermissionsEnum.UPDATE,
+      DELETE: PermissionsEnum.DELETE,
+      PATCH: PermissionsEnum.UPDATE,
+    };
 
-    for (const permission of user.permissions) {
-      if (isWildCard(permission.route) && isWildCard(permission.routeMethod)) {
-        return;
-      }
+    if (!map[method]) throw new UnauthorizedException('Method not allowed');
 
-      if (isWildCard(permission.route) && permission.routeMethod === method) {
-        return;
-      }
-
-      if (
-        permission.route === routePath &&
-        isWildCard(permission.routeMethod)
-      ) {
-        return;
-      }
-
-      if (permission.route === routePath && permission.routeMethod === method) {
-        return;
-      }
-
-      throw new UnauthorizedException('Cannot access this route');
-    }
+    return map[method];
   }
 }

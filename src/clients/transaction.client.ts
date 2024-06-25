@@ -17,12 +17,6 @@ export class TransactionMicroserviceClient extends MicroserviceClient {
     new Resource({
       name: 'transactions',
       path: '/transactions',
-      routes: [
-        {
-          method: 'GET',
-          path: '/myCustomRoute',
-        },
-      ],
     }),
   ];
 }

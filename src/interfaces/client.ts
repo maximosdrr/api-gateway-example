@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { Resource } from './resource';
 
 export abstract class MicroserviceClient {
@@ -5,6 +6,12 @@ export abstract class MicroserviceClient {
   abstract resources: Resource[];
 
   getResourceByName(name: string): Resource {
-    return this.resources.find((resource) => resource.name === name);
+    const resource = this.resources.find((resource) => resource.name === name);
+
+    if (!resource) {
+      throw new BadRequestException('Resource not found');
+    }
+
+    return resource;
   }
 }
