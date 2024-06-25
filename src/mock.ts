@@ -8,6 +8,7 @@ export const mockUser: User = {
   companies: [
     {
       companyId: 1,
+      role: 'custom',
       includedResourcePermissions: '*',
       excludedResourcePermissions: [
         {
@@ -21,6 +22,7 @@ export const mockUser: User = {
 
 export interface CompanyResources {
   companyId: number;
+  role: 'admin' | 'operator' | 'supervisor' | 'custom';
   includedResourcePermissions: Resource[] | string;
   excludedResourcePermissions: Resource[] | string;
 }
@@ -31,3 +33,6 @@ export interface User {
   email: string;
   companies: CompanyResources[];
 }
+
+export const JWT_SECRET = 'MY_SUPER_SECRET';
+export const JWT_REFRESH_SECRET = 'MY_SUPER_REFRESH_SECRET';

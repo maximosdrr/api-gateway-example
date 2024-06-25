@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-import { CompanyResources, User, mockUser } from './mock';
+import { CompanyResources, User, mockUser } from '../mock';
 import { MicroserviceClientService } from 'src/services/microservice-client.service';
 import { Resource } from 'src/interfaces/resource';
 import { PermissionsEnum } from 'src/interfaces/permissions';
@@ -17,6 +17,7 @@ export class PermissionAuthGuard implements CanActivate {
   constructor(
     private readonly microserviceClientService: MicroserviceClientService,
   ) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request: Request = context.switchToHttp().getRequest();
 

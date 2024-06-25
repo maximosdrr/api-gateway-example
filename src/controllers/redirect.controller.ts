@@ -11,6 +11,7 @@ import { HttpService } from '@nestjs/axios';
 import { AxiosError } from 'axios';
 import { PermissionAuthGuard } from 'src/guards/permission.guard';
 import { MicroserviceClientService } from 'src/services/microservice-client.service';
+// import { AccessTokenGuard } from 'src/guards/accessToken.guard';
 
 @Controller('')
 export class RedirectController {
@@ -19,8 +20,9 @@ export class RedirectController {
     private readonly httpService: HttpService,
   ) {}
 
+  // @UseGuards(AccessTokenGuard)
   @UseGuards(PermissionAuthGuard)
-  @All(':host/:resource/:path?')
+  @All('/v1/:host/:resource/:path?')
   async redirect(
     @Request() req: any,
     @Param('host') host: string,
