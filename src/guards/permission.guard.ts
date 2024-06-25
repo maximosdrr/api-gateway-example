@@ -10,6 +10,7 @@ import { CompanyResources, User, mockUser } from './mock';
 import { MicroserviceClientService } from 'src/services/microservice-client.service';
 import { Resource } from 'src/interfaces/resource';
 import { PermissionsEnum } from 'src/interfaces/permissions';
+import { SystemResourcesByMicroservices } from 'src/constants';
 
 @Injectable()
 export class PermissionAuthGuard implements CanActivate {
@@ -62,20 +63,79 @@ export class PermissionAuthGuard implements CanActivate {
     method: string,
   ) {
     const permission = this.getPermissionByMethod(method);
+    const resources = this.getAvailableResourcePermissions(company);
 
-    const targetResource = company.resources.find(
-      (r) => r.name === resource.name,
-    );
-
-    if (!targetResource) {
-      throw new UnauthorizedException('Cannot access this resource');
+    if (!resources.length) {
+      throw new UnauthorizedException('No available resources');
     }
 
+    const targetResource = resources.find((r) => r.name === resource.name);
     const hasPermission = targetResource.permissions.includes(permission);
 
     if (!hasPermission) {
       throw new UnauthorizedException('Permission denied');
     }
+  }
+
+  private getAvailableResourcePermissions(
+    company: CompanyResources,
+  ): Resource[] {
+    const includedPermissions = this.includePermissions(
+      company.includedResourcePermissions,
+    );
+
+    return this.excludePermissions(
+      company.excludedResourcePermissions,
+      includedPermissions,
+    );
+  }
+
+  private excludePermissions(
+    excludedResourcePermissions: Resource[] | string,
+    availableResourcePermission: Resource[],
+  ) {
+    if (excludedResourcePermissions === '*') {
+      availableResourcePermission = availableResourcePermission.map((r) => ({
+        ...r,
+        permissions: [],
+      }));
+    }
+
+    if (Array.isArray(excludedResourcePermissions)) {
+      availableResourcePermission = availableResourcePermission.map((r) => {
+        const excludedResource = (
+          excludedResourcePermissions as Resource[]
+        ).find((er) => er.name === r.name);
+        if (!excludedResource) return r;
+
+        return {
+          ...r,
+          permissions: r.permissions.filter(
+            (p) => !excludedResource.permissions.includes(p),
+          ),
+        };
+      });
+    }
+
+    return availableResourcePermission;
+  }
+
+  private includePermissions(includedResourcePermissions: Resource[] | string) {
+    let availableResourcePermission: Resource[] = [];
+
+    if (includedResourcePermissions === '*') {
+      availableResourcePermission = [
+        ...Object.values(SystemResourcesByMicroservices).flat(),
+      ];
+    }
+
+    if (Array.isArray(includedResourcePermissions)) {
+      availableResourcePermission.push(
+        ...(includedResourcePermissions as Resource[]),
+      );
+    }
+
+    return availableResourcePermission;
   }
 
   private getPermissionByMethod(method: string) {

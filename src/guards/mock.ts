@@ -8,10 +8,11 @@ export const mockUser: User = {
   companies: [
     {
       companyId: 1,
-      resources: [
+      includedResourcePermissions: '*',
+      excludedResourcePermissions: [
         {
           name: 'transactions',
-          permissions: [PermissionsEnum.CREATE, PermissionsEnum.READ],
+          permissions: [PermissionsEnum.CREATE],
         },
       ],
     },
@@ -20,7 +21,8 @@ export const mockUser: User = {
 
 export interface CompanyResources {
   companyId: number;
-  resources: Resource[];
+  includedResourcePermissions: Resource[] | string;
+  excludedResourcePermissions: Resource[] | string;
 }
 
 export interface User {

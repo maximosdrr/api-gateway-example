@@ -4,7 +4,7 @@ export class Resource {
   name: string;
   permissions: PermissionsEnum[];
 
-  constructor(data: { name: string; path: string }) {
+  constructor(data: { name: string; permissions: PermissionsEnum[] }) {
     Object.assign(this, data);
   }
 }

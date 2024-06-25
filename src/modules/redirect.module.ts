@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { RedirectController } from './redirect.controller';
 import { MicroserviceClientModule } from 'src/modules/microservice-client.module';
 import { HttpModule } from '@nestjs/axios';
+import { RedirectController } from 'src/redirect/redirect.controller';
 
 @Module({
   controllers: [RedirectController],
